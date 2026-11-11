@@ -1,0 +1,188 @@
+package runner.lwjgl;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+
+import static runner.lwjgl.LaunchPlanException.Category.PROFILE_UNSUPPORTED;
+
+/**
+ * Explicit registry of tested LWJGL profiles. Parsing metadata successfully never implies
+ * support: selection requires the complete module set and the audited artifacts.
+ */
+public final class LwjglProfileRegistry {
+    /** Minecraft 1.18.2 Linux/Windows track; see graphics-probe/results/lwjgl-abi-audit.md. */
+    public static final LwjglProfile MINECRAFT_1_18_2 = new LwjglProfile(
+            "minecraft-1.18.2-lwjgl-3.2.2-orbis-v1",
+            Map.of("org.lwjgl:lwjgl", "3.2.2",
+                    "org.lwjgl:lwjgl-glfw", "3.2.2",
+                    "org.lwjgl:lwjgl-jemalloc", "3.2.2",
+                    "org.lwjgl:lwjgl-openal", "3.2.2",
+                    "org.lwjgl:lwjgl-opengl", "3.2.2",
+                    "org.lwjgl:lwjgl-stb", "3.2.2",
+                    "org.lwjgl:lwjgl-tinyfd", "3.2.2"),
+            Map.of("org.lwjgl:lwjgl", "8ad6294407e15780b43e84929c40e4c5e997972e",
+                    "org.lwjgl:lwjgl-glfw", "d3ad4df38e400b8afba1de63f84338809399df5b",
+                    "org.lwjgl:lwjgl-jemalloc", "ee8e57a79300f78294576d87c4a587f8c99402e2",
+                    "org.lwjgl:lwjgl-openal", "2b772a102b0a11ee5f2109a5b136f4dc7c630827",
+                    "org.lwjgl:lwjgl-opengl", "6ac5bb88b44c43ea195a570aab059f63da004cd8",
+                    "org.lwjgl:lwjgl-stb", "3b8e6ebc5851dd3d17e37e5cadce2eff2a429f0f",
+                    "org.lwjgl:lwjgl-tinyfd", "fcbe606c8f8da6f8f9a05e2c540eb1ee8632b0e9"));
+
+    /**
+     * Minecraft 1.19 to 1.21.11: the LWJGL 3.3.3 set 1.20.5 to 1.21.11 declare (Mojang version metadata),
+     * which adds lwjgl-freetype; the launcher gives it to 1.19 to 1.20.4 too (they declare 3.3.1 or 3.3.2).
+     * Runs on LWJGL 3.3.3 natives built for Orbis with libffi.
+     */
+    public static final LwjglProfile MINECRAFT_1_20_5 = new LwjglProfile(
+            "minecraft-1.20.5-lwjgl-3.3.3-orbis-v1",
+            Map.of("org.lwjgl:lwjgl", "3.3.3",
+                    "org.lwjgl:lwjgl-freetype", "3.3.3",
+                    "org.lwjgl:lwjgl-glfw", "3.3.3",
+                    "org.lwjgl:lwjgl-jemalloc", "3.3.3",
+                    "org.lwjgl:lwjgl-openal", "3.3.3",
+                    "org.lwjgl:lwjgl-opengl", "3.3.3",
+                    "org.lwjgl:lwjgl-stb", "3.3.3",
+                    "org.lwjgl:lwjgl-tinyfd", "3.3.3"),
+            Map.of("org.lwjgl:lwjgl", "29589b5f87ed335a6c7e7ee6a5775f81f97ecb84",
+                    "org.lwjgl:lwjgl-freetype", "a0db6c84a8becc8ca05f9dbfa985edc348a824c7",
+                    "org.lwjgl:lwjgl-glfw", "efa1eb78c5ccd840e9f329717109b5e892d72f8e",
+                    "org.lwjgl:lwjgl-jemalloc", "b543467b7ff3c6920539a88ee602d34098628be5",
+                    "org.lwjgl:lwjgl-openal", "daada81ceb5fc0c291fbfdd4433cb8d9423577f2",
+                    "org.lwjgl:lwjgl-opengl", "02f6b0147078396a58979125a4c947664e98293a",
+                    "org.lwjgl:lwjgl-stb", "25dd6161988d7e65f71d5065c99902402ee32746",
+                    "org.lwjgl:lwjgl-tinyfd", "82d755ca94b102e9ca77283b9e2dc46d1b15fbe5"));
+
+    /**
+     * Minecraft 26.1 and 26.2: the LWJGL 3.4.1 set they declare (Mojang version metadata). Runs on LWJGL
+     * 3.4.1 natives built for Orbis with libffi 3.5.0; on Java 25 LWJGL calls functions and callbacks
+     * through the JDK's foreign function linker.
+     */
+    public static final LwjglProfile MINECRAFT_26_1 = new LwjglProfile(
+            "minecraft-26.1-lwjgl-3.4.1-orbis-v1",
+            Map.of("org.lwjgl:lwjgl", "3.4.1",
+                    "org.lwjgl:lwjgl-freetype", "3.4.1",
+                    "org.lwjgl:lwjgl-glfw", "3.4.1",
+                    "org.lwjgl:lwjgl-jemalloc", "3.4.1",
+                    "org.lwjgl:lwjgl-openal", "3.4.1",
+                    "org.lwjgl:lwjgl-opengl", "3.4.1",
+                    "org.lwjgl:lwjgl-stb", "3.4.1",
+                    "org.lwjgl:lwjgl-tinyfd", "3.4.1"),
+            Map.of("org.lwjgl:lwjgl", "6105690714874b995aa7812e4f7732a21109276c",
+                    "org.lwjgl:lwjgl-freetype", "caa75a37e857efc9b0686e434d708d6420c5b6ea",
+                    "org.lwjgl:lwjgl-glfw", "a782b1ddd175c9107bf300fd92920579ea65e2a4",
+                    "org.lwjgl:lwjgl-jemalloc", "16b663092854fc6adfe0a941e61cae2bb2e437b6",
+                    "org.lwjgl:lwjgl-openal", "8508bd60589de0539aa465b78fcf838efd07ae9a",
+                    "org.lwjgl:lwjgl-opengl", "830412cab823c029cda6b9729f9d2ed36cf79959",
+                    "org.lwjgl:lwjgl-stb", "f077c3dafc31924fbe8acb0b913f08977ba27f8e",
+                    "org.lwjgl:lwjgl-tinyfd", "562697d40dbd2ed0424bf24dcf65d51170f81adf"));
+
+    /**
+     * Minecraft 26.2: LWJGL 3.4.1 with shaderc, spvc, vma and vulkan added, and the core as its "unsafe"
+     * variant (no Java 25 FFM layer; calls go through JNI and libffi). The OpenGL backend uses none of
+     * the four: Minecraft loads them only when a Vulkan loader is present, which the console has not.
+     */
+    public static final LwjglProfile MINECRAFT_26_2 = new LwjglProfile(
+            "minecraft-26.2-lwjgl-3.4.1-orbis-v1",
+            Map.ofEntries(
+                    Map.entry("org.lwjgl:lwjgl", "3.4.1"),
+                    Map.entry("org.lwjgl:lwjgl-freetype", "3.4.1"),
+                    Map.entry("org.lwjgl:lwjgl-glfw", "3.4.1"),
+                    Map.entry("org.lwjgl:lwjgl-jemalloc", "3.4.1"),
+                    Map.entry("org.lwjgl:lwjgl-openal", "3.4.1"),
+                    Map.entry("org.lwjgl:lwjgl-opengl", "3.4.1"),
+                    Map.entry("org.lwjgl:lwjgl-shaderc", "3.4.1"),
+                    Map.entry("org.lwjgl:lwjgl-spvc", "3.4.1"),
+                    Map.entry("org.lwjgl:lwjgl-stb", "3.4.1"),
+                    Map.entry("org.lwjgl:lwjgl-tinyfd", "3.4.1"),
+                    Map.entry("org.lwjgl:lwjgl-vma", "3.4.1"),
+                    Map.entry("org.lwjgl:lwjgl-vulkan", "3.4.1")),
+            Map.ofEntries(
+                    Map.entry("org.lwjgl:lwjgl", "129e06a04f93992cb2a45172435b21fc4b60dd7d"),
+                    Map.entry("org.lwjgl:lwjgl-freetype", "caa75a37e857efc9b0686e434d708d6420c5b6ea"),
+                    Map.entry("org.lwjgl:lwjgl-glfw", "a782b1ddd175c9107bf300fd92920579ea65e2a4"),
+                    Map.entry("org.lwjgl:lwjgl-jemalloc", "16b663092854fc6adfe0a941e61cae2bb2e437b6"),
+                    Map.entry("org.lwjgl:lwjgl-openal", "8508bd60589de0539aa465b78fcf838efd07ae9a"),
+                    Map.entry("org.lwjgl:lwjgl-opengl", "830412cab823c029cda6b9729f9d2ed36cf79959"),
+                    Map.entry("org.lwjgl:lwjgl-shaderc", "5c02c88f0d879529014c78463b76f43fdecfd272"),
+                    Map.entry("org.lwjgl:lwjgl-spvc", "188553592e97b5ab2dba54a1b403ee80b48dad4c"),
+                    Map.entry("org.lwjgl:lwjgl-stb", "f077c3dafc31924fbe8acb0b913f08977ba27f8e"),
+                    Map.entry("org.lwjgl:lwjgl-tinyfd", "562697d40dbd2ed0424bf24dcf65d51170f81adf"),
+                    Map.entry("org.lwjgl:lwjgl-vma", "2c54ce10154feb1ede4d23c5947438cdbfdcc003"),
+                    Map.entry("org.lwjgl:lwjgl-vulkan", "d0601fdc38890755e5638048c14cc0f7b990964b")));
+
+    /** Minecraft 26.3: LWJGL 3.4.3 with SDL3 in place of GLFW (the adapter replaces lwjgl-sdl). */
+    public static final LwjglProfile MINECRAFT_26_3 = new LwjglProfile(
+            "minecraft-26.3-lwjgl-3.4.3-orbis-v1",
+            Map.ofEntries(
+                    Map.entry("org.lwjgl:lwjgl", "3.4.3"),
+                    Map.entry("org.lwjgl:lwjgl-freetype", "3.4.3"),
+                    Map.entry("org.lwjgl:lwjgl-jemalloc", "3.4.3"),
+                    Map.entry("org.lwjgl:lwjgl-openal", "3.4.3"),
+                    Map.entry("org.lwjgl:lwjgl-opengl", "3.4.3"),
+                    Map.entry("org.lwjgl:lwjgl-sdl", "3.4.3"),
+                    Map.entry("org.lwjgl:lwjgl-shaderc", "3.4.3"),
+                    Map.entry("org.lwjgl:lwjgl-spvc", "3.4.3"),
+                    Map.entry("org.lwjgl:lwjgl-stb", "3.4.3"),
+                    Map.entry("org.lwjgl:lwjgl-vma", "3.4.3"),
+                    Map.entry("org.lwjgl:lwjgl-vulkan", "3.4.3")),
+            Map.ofEntries(
+                    Map.entry("org.lwjgl:lwjgl", "7ab5265a73d8a959ed62332d546536ae6be2f0d5"),
+                    Map.entry("org.lwjgl:lwjgl-freetype", "d2b12961d44f92860fb1ab501f9c69b7a2975236"),
+                    Map.entry("org.lwjgl:lwjgl-jemalloc", "350f317eaf5295b1e53f6664ef5fdeeaaa7dcbf0"),
+                    Map.entry("org.lwjgl:lwjgl-openal", "32b52cda5af6937a4e4bd321bdb83082025cb332"),
+                    Map.entry("org.lwjgl:lwjgl-opengl", "b81769ee48050f8c71e70839505f350bf9219d90"),
+                    Map.entry("org.lwjgl:lwjgl-sdl", "c02146735d6ff70d070c73532b435e5c893a346b"),
+                    Map.entry("org.lwjgl:lwjgl-shaderc", "ba9fbc8fc4d50b3e4b436cc958ddb4abdb05867c"),
+                    Map.entry("org.lwjgl:lwjgl-spvc", "98e5b5ef5159100b26a169a9aed6c24e820e3eaa"),
+                    Map.entry("org.lwjgl:lwjgl-stb", "cdce54785bd3758e44a81f345d6260774d921c78"),
+                    Map.entry("org.lwjgl:lwjgl-vma", "816a6ac87f1e447e5346ca0e7a1078353f51fbd6"),
+                    Map.entry("org.lwjgl:lwjgl-vulkan", "ffdaf1898192059f059d66f9fa37e3debcac10e0")));
+
+    private static final List<LwjglProfile> PROFILES = List.of(MINECRAFT_1_18_2, MINECRAFT_1_20_5, MINECRAFT_26_1,
+            MINECRAFT_26_2, MINECRAFT_26_3);
+
+    private LwjglProfileRegistry() {}
+
+    public static List<LwjglProfile> profiles() {
+        return PROFILES;
+    }
+
+    /** Selects the profile whose exact module set and Java artifacts match the plan. */
+    public static LwjglProfile select(ResolvedLaunchPlan plan) throws LaunchPlanException {
+        return select(plan, PROFILES);
+    }
+
+    /** Selects a profile and validates the graphics bundle that provides it. */
+    public static GraphicsBundle select(ResolvedLaunchPlan plan, Path bundleRoot) throws LaunchPlanException {
+        return GraphicsBundle.load(bundleRoot, select(plan));
+    }
+
+    static LwjglProfile select(ResolvedLaunchPlan plan, List<LwjglProfile> profiles)
+            throws LaunchPlanException {
+        Map<String, String> requested = plan.lwjglModules();
+        if (requested.isEmpty())
+            throw new LaunchPlanException(PROFILE_UNSUPPORTED, plan.versionId() + " declares no LWJGL modules");
+        for (LwjglProfile profile : profiles) {
+            if (!profile.modules().equals(requested)) continue;
+            for (Map.Entry<String, String> pin : profile.javaSha1().entrySet()) {
+                String actual = plan.lwjglSha1().get(pin.getKey());
+                if (!pin.getValue().equals(actual))
+                    throw new LaunchPlanException(PROFILE_UNSUPPORTED, pin.getKey() + " artifact SHA-1 "
+                            + actual + " is not the audited " + pin.getValue() + " for " + profile.id());
+            }
+            return profile;
+        }
+        throw new LaunchPlanException(PROFILE_UNSUPPORTED, "no tested profile for LWJGL set " + requested
+                + " (supported: " + describe(profiles) + ")");
+    }
+
+    private static String describe(List<LwjglProfile> profiles) {
+        StringBuilder builder = new StringBuilder();
+        for (LwjglProfile profile : profiles) {
+            if (builder.length() > 0) builder.append("; ");
+            builder.append(profile.id()).append(' ').append(profile.modules());
+        }
+        return builder.toString();
+    }
+}

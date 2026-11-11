@@ -1,0 +1,96 @@
+# Installed package and repository ownership
+
+The launcher repository assembles the release. Native sources remain in their
+separate repositories, pinned by `repositories.lock.json`; see REPOSITORIES.md.
+Assembly uses verified exports, rather than rebuilding Mesa or the JDKs.
+
+```text
+/app0/                         installed PKG, read-only
+  eboot.bin                    native runner
+  app.jar                      Java bootstrap
+  defaults/                    first-start settings
+  manifests/                   launcher profile and payload hash inventory
+  runtimes/jdk17/               JDK 17, which the launcher runs on
+    lib/orbis/libraries/        launcher Java dependencies
+  orbis/graphics/               Mesa, LWJGL, SDL, OpenAL and Java adapters, for every runtime
+  orbis/desktop/                Cacio desktop adapters, for every runtime
+/data/orbis-jdk/                downloads, instances, settings and caches
+  runtimes/jdk21/, jdk25/       downloaded Java runtimes
+```
+
+As AngelAuraMC's launcher does, the package carries one runtime and the launcher downloads
+the others when a Minecraft version first needs one (`RuntimeInstaller`): JDK 21 for 1.20.5+
+and JDK 25 for 26.1+, from orbis-openjdk's `download` release, checked against its
+`SHA256SUMS`. Before each such launch and install it compares that checksum with the installed
+runtime's and downloads the new build when the release has moved on; offline, the installed
+runtime is used. The release must be public for consoles to reach it.
+
+Runtime selection switches only `java_home`; every runtime uses the one graphics and
+desktop bundle. The launch transaction restores runner.conf after the game exits. Settings
+from earlier packages, which named per-JDK bundles, are moved onto these paths at start.
+The launcher bootstrap resolves its eight Java dependencies from the packaged JDK 17.
+Minecraft, loader and mod dependencies resolve from the writable library cache under `/data`.
+
+On a fresh install, the runner publishes complete default settings exclusively
+into `/data/orbis-jdk/runner`. It preserves existing settings. The installed
+launcher profile contains no Minecraft game; the user installs or selects one.
+Runtime exports, graphics, desktop adapters and provided Java dependencies are
+verified against `orbis-java-app/tools/runtime-package-inputs.json` before staging.
+The generated payload manifest records component revisions and every file hash.
+Sources, objects, build logs and graphics build-info.json are excluded.
+
+## Building
+
+Prepare the pinned repositories and the exports/cached dependencies identified
+by the input inventory, then run:
+
+```sh
+make -C orbis-java-app package
+```
+
+The dedicated `orbis-java-app/build-selfcontained` output preserves old runner
+builds and native exports. Assembly rejects unexpected or changed payload files
+and replaces the generated stage only after verification. It does not download
+games, rebuild native ports, deploy to the console, or delete user data.
+Changing a runtime export requires an intentional inventory update and testing.
+
+## Versions and updates
+
+Releases use the console's `XX.YY` application version: 01.00 is the baseline, then 01.01 and on.
+`VERSION` in `orbis-java-app/Makefile` sets both `param.sfo` and the runner's reported version.
+Every release is a complete PKG with the same content ID, so a newer one installs over the older one.
+PS4 patch packages (`pkg_ps4_patch`) are not possible with this toolchain: LibOrbisPkg rejects that
+volume type, and its patch content flags are unfinished.
+
+## Build secrets
+
+Release launchers embed the Microsoft application (client) ID. It is never committed: put it in the
+untracked `secrets.env` (copy `secrets.env.example`), or in CI set `ORBIS_MSA_CLIENT_ID` from a
+repository secret, for example in a GitHub Actions step:
+
+```yaml
+env:
+  ORBIS_MSA_CLIENT_ID: ${{ secrets.ORBIS_MSA_CLIENT_ID }}
+```
+
+`graphics-probe/tools/build_launcher.py` encodes it into `orbis-launcher.jar`. A build without it
+falls back to `/data/orbis-jdk/launcher/microsoft-auth.properties`. The encoding only prevents
+casual discovery; a public client ID is visible in every sign-in request. Keep a private copy of
+`secrets.env`: the repository bundles in `orbis-port-backups` do not include untracked files.
+
+## Console acceptance and upgrade
+
+Host verification does not establish console compatibility. Test a fresh data
+setup by backing up or moving existing runner settings and launcher state first;
+keep game saves, accounts, instances and downloads. Confirm first-start settings
+publication works on the console data filesystem, the launcher opens without a
+preinstalled game, and an existing settings file remains unchanged on restart.
+Test games requiring JDK 17, 21 and 25, the working OpenGL and Vulkan profiles,
+and return to the launcher after each game exits.
+
+Existing installations preserve `runner.conf`, `jvm-options.txt`, `main-class.txt`
+and `app-args.txt`. Before testing the new installed bootstrap, back these files
+up and compare settings against `/app0/defaults`; old external JAR/metadata
+paths and temporary probe JVM options must be removed or updated deliberately.
+Known legacy JDK home paths map to the installed JDK, including trailing slashes.
+Do not delete the old exports or recovery bundles until console acceptance.
